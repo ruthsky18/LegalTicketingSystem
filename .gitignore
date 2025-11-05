@@ -50,6 +50,7 @@ Thumbs.db
 # Project specific - exclude uploaded media files
 media/documents/
 media/reviewed_documents/
+media/*
 !media/.gitkeep
 
 # Static files (will be generated)
