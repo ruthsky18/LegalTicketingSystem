@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: lrms
+    env: python
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
+    startCommand: gunicorn lrms_project.wsgi:application --workers 2 --timeout 120
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: ALLOWED_HOSTS
+        value: lrms.onrender.com
+      # Database (set these from Supabase)
+      - key: DB_ENGINE
+        value: django.db.backends.postgresql
+      - key: DB_NAME
+        value: postgres
+      - key: DB_USER
+        value: postgres
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_HOST
+        value: your-db-host.supabase.co
+      - key: DB_PORT
+        value: "5432"
+      - key: DB_SSLMODE
+        value: require
+
+
+
+

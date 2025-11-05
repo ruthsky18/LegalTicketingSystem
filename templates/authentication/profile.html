@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}Profile - LRMS{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="bi bi-person-circle"></i> User Profile</h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Username:</strong> {{ user.username }}</p>
+                        <p><strong>Name:</strong> {{ user.first_name }} {{ user.last_name }}</p>
+                        <p><strong>Email:</strong> {{ user.email }}</p>
+                        <p><strong>Role:</strong> 
+                            <span class="badge bg-{% if user.is_legal_admin %}primary{% else %}success{% endif %}">
+                                {{ user.get_role_display }}
+                            </span>
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Date Joined:</strong> {{ user.date_joined|date:"F d, Y" }}</p>
+                        <p><strong>Last Login:</strong> {{ user.last_login|date:"F d, Y H:i" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+

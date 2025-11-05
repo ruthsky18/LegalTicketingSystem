@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+
+{% block title %}Ticket #{{ ticket.id }} - LRMS{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3><i class="bi bi-ticket-perforated"></i> Ticket #{{ ticket.id }}</h3>
+                <span class="badge bg-{{ ticket.get_status_badge_class }} fs-6">
+                    {{ ticket.get_status_display }}
+                </span>
+            </div>
+            <div class="card-body">
+                <!-- Ticket Information -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h5><i class="bi bi-person"></i> Requester Information</h5>
+                        <p><strong>Name:</strong> {{ ticket.name }} {{ ticket.last_name }}</p>
+                        <p><strong>Email:</strong> {{ ticket.email }}</p>
+                        <p><strong>Department:</strong> {{ ticket.get_department_display }}</p>
+                        {% if ticket.company %}
+                            <p><strong>Company:</strong> {{ ticket.get_company_display }}</p>
+                        {% endif %}
+                        {% if ticket.contact_number %}
+                            <p><strong>Contact:</strong> {{ ticket.contact_number }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <h5><i class="bi bi-calendar"></i> Dates</h5>
+                        <p><strong>Created:</strong> {{ ticket.date_created|date:"F d, Y H:i" }}</p>
+                        {% if ticket.due_date %}
+                            <p><strong>Due Date:</strong> {{ ticket.due_date|date:"F d, Y" }}</p>
+                        {% endif %}
+                        <p><strong>Last Updated:</strong> {{ ticket.date_updated|date:"F d, Y H:i" }}</p>
+                    </div>
+                </div>
+                
+                <!-- Request Details -->
+                <div class="mb-4">
+                    <h5><i class="bi bi-info-circle"></i> Request Details</h5>
+                    <p><strong>Type:</strong> 
+                        <span class="badge bg-secondary">{{ ticket.get_nature_of_engagement_display }}</span>
+                    </p>
+                    {% if ticket.details_of_contracting_party %}
+                        <p><strong>Contracting Party Details:</strong></p>
+                        <div class="bg-light p-3 rounded">
+                            {{ ticket.details_of_contracting_party|linebreaks }}
+                        </div>
+                    {% endif %}
+                    {% if ticket.remarks %}
+                        <p><strong>Remarks:</strong></p>
+                        <div class="bg-light p-3 rounded">
+                            {{ ticket.remarks|linebreaks }}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Attached Documents -->
+                {% if ticket.document_attached %}
+                    <div class="mb-4">
+                        <h5><i class="bi bi-paperclip"></i> Attached Document</h5>
+                        <div class="bg-light p-3 rounded">
+                            <p><strong>File:</strong> {{ ticket.document_attached.name|slice:"7:" }}</p>
+                            <a href="{{ ticket.document_attached.url }}" class="btn btn-outline-primary btn-sm" target="_blank">
+                                <i class="bi bi-download"></i> Download
+                            </a>
+                        </div>
+                    </div>
+                {% endif %}
+                
+                <!-- Admin Response -->
+                {% if ticket.admin_comments %}
+                    <div class="mb-4">
+                        <h5><i class="bi bi-chat-dots"></i> Legal Team Response</h5>
+                        <div class="bg-info bg-opacity-10 p-3 rounded">
+                            {{ ticket.admin_comments|linebreaks }}
+                        </div>
+                    </div>
+                {% endif %}
+                
+                <!-- Reviewed Document -->
+                {% if ticket.reviewed_document %}
+                    <div class="mb-4">
+                        <h5><i class="bi bi-file-check"></i> Reviewed Document</h5>
+                        <div class="bg-success bg-opacity-10 p-3 rounded">
+                            <p><strong>File:</strong> {{ ticket.reviewed_document.name|slice:"18:" }}</p>
+                            <a href="{{ ticket.reviewed_document.url }}" class="btn btn-outline-success btn-sm" target="_blank">
+                                <i class="bi bi-download"></i> Download Reviewed Document
+                            </a>
+                        </div>
+                    </div>
+                {% endif %}
+                
+                <!-- Status Information -->
+                {% if ticket.assigned_to %}
+                    <div class="mb-4">
+                        <h5><i class="bi bi-person-badge"></i> Assignment</h5>
+                        <p><strong>Assigned to:</strong> {{ ticket.assigned_to.first_name }} {{ ticket.assigned_to.last_name }}</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-info-circle"></i> Ticket Status</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <strong>Current Status:</strong><br>
+                    <span class="badge bg-{{ ticket.get_status_badge_class }} fs-6 mt-1">
+                        {{ ticket.get_status_display }}
+                    </span>
+                </div>
+                
+                {% if ticket.priority %}
+                    <div class="mb-3">
+                        <strong>Priority:</strong><br>
+                        <span class="badge bg-{{ ticket.get_priority_badge_class }} fs-6 mt-1">
+                            {{ ticket.get_priority_display }}
+                        </span>
+                    </div>
+                {% endif %}
+                
+                <div class="mb-3">
+                    <strong>Request Type:</strong><br>
+                    <span class="badge bg-secondary fs-6 mt-1">
+                        {{ ticket.get_nature_of_engagement_display }}
+                    </span>
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <a href="{% url 'tickets:user_ticket_conversation' ticket.id %}" class="btn btn-success">
+                        <i class="bi bi-chat-dots"></i> Open Conversation
+                    </a>
+                    <a href="{% url 'tickets:user_dashboard' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-arrow-left"></i> Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
