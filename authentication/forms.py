@@ -10,16 +10,10 @@ class SignUpForm(UserCreationForm):
     first_name = forms.CharField(max_length=30, required=True)
     last_name = forms.CharField(max_length=30, required=True)
     department = forms.ChoiceField(choices=User.DEPARTMENT_CHOICES, required=True, label='Department')
-    role = forms.ChoiceField(
-        choices=[('user', 'Department User')], 
-        required=True, 
-        initial='user',
-        widget=forms.HiddenInput()
-    )
     
     class Meta:
         model = User
-        fields = ('username', 'first_name', 'last_name', 'email', 'department', 'role', 'password1', 'password2')
+        fields = ('username', 'first_name', 'last_name', 'email', 'department', 'password1', 'password2')
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -30,6 +24,10 @@ class SignUpForm(UserCreationForm):
         self.fields['department'].widget.attrs.update({'class': 'form-control'})
         self.fields['password1'].widget.attrs.update({'class': 'form-control'})
         self.fields['password2'].widget.attrs.update({'class': 'form-control'})
+        
+        # Remove role field from form completely
+        if 'role' in self.fields:
+            del self.fields['role']
     
     def save(self, commit=True):
         user = super().save(commit=False)
