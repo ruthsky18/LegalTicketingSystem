@@ -24,14 +24,25 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-local-dev')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DEBUG', cast=bool, default=True)
+# Handle DEBUG properly - check for string "False" or "True"
+debug_value = config('DEBUG', default='True')
+if isinstance(debug_value, str):
+    DEBUG = debug_value.lower() in ('true', '1', 'yes', 'on')
+else:
+    DEBUG = bool(debug_value)
 
 # Handle ALLOWED_HOSTS properly
 allowed_hosts_str = config('ALLOWED_HOSTS', default='')
 if allowed_hosts_str:
     ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_str.split(',') if host.strip()]
 else:
-    ALLOWED_HOSTS = [] if DEBUG else ['*']  # Allow all hosts in production if not specified
+    ALLOWED_HOSTS = []
+
+# In production, always allow Railway domain (even if not in env var)
+if not DEBUG:
+    railway_domain = 'web-production-6cd81.up.railway.app'
+    if railway_domain not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(railway_domain)
 
 
 # Application definition
