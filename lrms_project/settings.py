@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
+import os
 from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -117,15 +118,23 @@ db_host = config('DB_HOST', default='').strip()
 db_port = config('DB_PORT', default='').strip()
 db_sslmode = config('DB_SSLMODE', default='require').strip()
 
-# Check if we're in production (Railway) - use PostgreSQL if host is set
-# Railway always sets DB_HOST for PostgreSQL
-if db_host and db_name and db_user:
+# Check if we're in production (Railway) - detect by checking for Railway environment
+# or if DB_HOST contains 'supabase' or 'railway'
+is_production = (
+    'RAILWAY_ENVIRONMENT' in os.environ or 
+    'RAILWAY_PROJECT_ID' in os.environ or
+    'supabase' in db_host.lower() or
+    'railway' in db_host.lower()
+)
+
+# Use PostgreSQL if we have the required variables OR if we're in production
+if (db_host and db_name and db_user) or (is_production and db_host):
     # Force PostgreSQL for production
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': db_name,
-            'USER': db_user,
+            'NAME': db_name or 'postgres',
+            'USER': db_user or 'postgres',
             'PASSWORD': db_password,
             'HOST': db_host,
             'PORT': db_port or '5432',
