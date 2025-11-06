@@ -108,20 +108,37 @@ WSGI_APPLICATION = 'lrms_project.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': config('DB_ENGINE', default='django.db.backends.sqlite3'),
-        'NAME': config('DB_NAME', default=str(BASE_DIR / 'db.sqlite3')),
-        'USER': config('DB_USER', default=''),
-        'PASSWORD': config('DB_PASSWORD', default=''),
-        'HOST': config('DB_HOST', default=''),
-        'PORT': config('DB_PORT', default=''),
-    }
-}
+# Get database configuration from environment
+db_engine = config('DB_ENGINE', default='')
+db_name = config('DB_NAME', default='')
+db_user = config('DB_USER', default='')
+db_password = config('DB_PASSWORD', default='')
+db_host = config('DB_HOST', default='')
+db_port = config('DB_PORT', default='')
 
-# Add SSL options only for PostgreSQL
-if config('DB_ENGINE', default='django.db.backends.sqlite3') == 'django.db.backends.postgresql':
-    DATABASES['default']['OPTIONS'] = {'sslmode': config('DB_SSLMODE', default='')}
+# Use PostgreSQL if all required variables are set, otherwise fall back to SQLite
+if db_engine == 'django.db.backends.postgresql' and db_name and db_user and db_host:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': db_name,
+            'USER': db_user,
+            'PASSWORD': db_password,
+            'HOST': db_host,
+            'PORT': db_port or '5432',
+            'OPTIONS': {
+                'sslmode': config('DB_SSLMODE', default='require'),
+            },
+        }
+    }
+else:
+    # Fall back to SQLite for local development
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
