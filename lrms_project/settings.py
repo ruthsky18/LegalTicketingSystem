@@ -38,11 +38,14 @@ if allowed_hosts_str:
 else:
     ALLOWED_HOSTS = []
 
-# In production, always allow Railway domain (even if not in env var)
-if not DEBUG:
-    railway_domain = 'web-production-6cd81.up.railway.app'
-    if railway_domain not in ALLOWED_HOSTS:
-        ALLOWED_HOSTS.append(railway_domain)
+# Always add Railway domain (critical for deployment)
+railway_domain = 'web-production-6cd81.up.railway.app'
+if railway_domain not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(railway_domain)
+
+# Also add wildcard for Railway subdomains (more flexible)
+if '*' not in ALLOWED_HOSTS and not DEBUG:
+    ALLOWED_HOSTS.append('*')
 
 
 # Application definition
