@@ -109,15 +109,18 @@ WSGI_APPLICATION = 'lrms_project.wsgi.application'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 # Get database configuration from environment
-db_engine = config('DB_ENGINE', default='')
-db_name = config('DB_NAME', default='')
-db_user = config('DB_USER', default='')
-db_password = config('DB_PASSWORD', default='')
-db_host = config('DB_HOST', default='')
-db_port = config('DB_PORT', default='')
+db_engine = config('DB_ENGINE', default='').strip()
+db_name = config('DB_NAME', default='').strip()
+db_user = config('DB_USER', default='').strip()
+db_password = config('DB_PASSWORD', default='').strip()
+db_host = config('DB_HOST', default='').strip()
+db_port = config('DB_PORT', default='').strip()
+db_sslmode = config('DB_SSLMODE', default='require').strip()
 
-# Use PostgreSQL if all required variables are set, otherwise fall back to SQLite
-if db_engine == 'django.db.backends.postgresql' and db_name and db_user and db_host:
+# Check if we're in production (Railway) - use PostgreSQL if host is set
+# Railway always sets DB_HOST for PostgreSQL
+if db_host and db_name and db_user:
+    # Force PostgreSQL for production
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
@@ -127,12 +130,13 @@ if db_engine == 'django.db.backends.postgresql' and db_name and db_user and db_h
             'HOST': db_host,
             'PORT': db_port or '5432',
             'OPTIONS': {
-                'sslmode': config('DB_SSLMODE', default='require'),
+                'sslmode': db_sslmode or 'require',
             },
+            'CONN_MAX_AGE': 600,  # Connection pooling
         }
     }
 else:
-    # Fall back to SQLite for local development
+    # Fall back to SQLite only for local development
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
