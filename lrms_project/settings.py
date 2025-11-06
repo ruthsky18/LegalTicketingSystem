@@ -47,6 +47,18 @@ if railway_domain not in ALLOWED_HOSTS:
 if '*' not in ALLOWED_HOSTS and not DEBUG:
     ALLOWED_HOSTS.append('*')
 
+# CSRF Trusted Origins (required for HTTPS)
+CSRF_TRUSTED_ORIGINS = [
+    'https://web-production-6cd81.up.railway.app',
+    'http://web-production-6cd81.up.railway.app',
+]
+
+# Also add from environment variable if provided
+csrf_origins_str = config('CSRF_TRUSTED_ORIGINS', default='')
+if csrf_origins_str:
+    additional_origins = [origin.strip() for origin in csrf_origins_str.split(',') if origin.strip()]
+    CSRF_TRUSTED_ORIGINS.extend(additional_origins)
+
 
 # Application definition
 
