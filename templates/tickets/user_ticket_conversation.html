@@ -1,41 +1,36 @@
 {% extends 'base.html' %}
 
-{% block title %}Conversation - Ticket #{{ ticket.id }} - LRMS{% endblock %}
+{% block title %}Conversation - Ticket #{{ ticket.id }} - Legal Department Ticketing System{% endblock %}
 
 {% block content %}
 <div class="row">
     <div class="col-md-8">
         <!-- Conversation Thread -->
         <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h3><i class="bi bi-chat-dots"></i> Conversation - Ticket #{{ ticket.id }}</h3>
-                <div>
-                    <span class="badge bg-{{ ticket.get_status_badge_class }} me-2">
-                        {{ ticket.get_status_display }}
-                    </span>
-                    <span class="badge bg-secondary">{{ ticket.get_nature_of_engagement_display }}</span>
-                </div>
+            <div class="card-header">
+                <h5 class="mb-0">Conversation - Ticket #{{ ticket.id }}</h5>
+                <small class="text-muted">
+                    {{ ticket.get_status_display }} | {{ ticket.get_nature_of_engagement_display }}
+                </small>
             </div>
             <div class="card-body">
                 <!-- Messages -->
-                <div class="conversation-messages" style="max-height: 500px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 0.375rem; padding: 1rem; margin-bottom: 1rem;">
+                <div class="conversation-messages" style="max-height: 500px; overflow-y: auto; padding: 1rem; margin-bottom: 1.5rem; background-color: #f8f9fa;">
                     {% for message in conversation_messages %}
-                        <div class="message mb-3 {% if message.is_admin_message %}admin-message{% else %}user-message{% endif %}">
+                        <div class="message mb-3">
                             <div class="d-flex {% if message.is_admin_message %}justify-content-start{% else %}justify-content-end{% endif %}">
-                                <div class="message-bubble {% if message.is_admin_message %}bg-info text-white{% else %}bg-primary text-white{% endif %}" style="max-width: 70%; padding: 0.75rem; border-radius: 1rem;">
-                                    <div class="message-header d-flex justify-content-between align-items-center mb-2">
-                                        <strong>
+                                <div style="max-width: 70%; padding: 0.75rem; background-color: {% if message.is_admin_message %}#e9ecef{% else %}#2c3e50{% endif %}; color: {% if message.is_admin_message %}#212529{% else %}#ffffff{% endif %}; border-radius: 0.25rem;">
+                                    <div class="d-flex justify-content-between align-items-center mb-1" style="font-size: 0.875rem;">
+                                        <span>
                                             {% if message.is_admin_message %}
-                                                <i class="bi bi-shield-check"></i> Legal Team
+                                                Legal Team
                                             {% else %}
-                                                <i class="bi bi-person"></i> You
+                                                You
                                             {% endif %}
-                                        </strong>
-                                        <small class="text-white-50">
-                                            {{ message.created_at|date:"M d, Y H:i" }}
-                                        </small>
+                                        </span>
+                                        <span style="opacity: 0.7;">{{ message.created_at|date:"M d, Y H:i" }}</span>
                                     </div>
-                                    <div class="message-content">
+                                    <div>
                                         {{ message.message|linebreaks }}
                                     </div>
                                 </div>
@@ -43,7 +38,6 @@
                         </div>
                     {% empty %}
                         <div class="text-center text-muted py-4">
-                            <i class="bi bi-chat-dots fs-1"></i>
                             <p>No messages yet. Start the conversation!</p>
                         </div>
                     {% endfor %}
@@ -53,26 +47,26 @@
                 <form method="post" enctype="multipart/form-data">
                     {% csrf_token %}
                     <div class="mb-3">
-                        <label for="{{ form.message.id_for_label }}" class="form-label">Send Message to Legal Team</label>
+                        <label for="{{ form.message.id_for_label }}" class="form-label">Send Message</label>
                         {{ form.message }}
                         {% if form.message.errors %}
-                            <div class="text-danger">{{ form.message.errors }}</div>
+                            <div class="text-danger small">{{ form.message.errors }}</div>
                         {% endif %}
                     </div>
                     <div class="mb-3">
                         <label for="{{ form.attachment.id_for_label }}" class="form-label">Attachment (optional)</label>
                         {{ form.attachment }}
-                        <div class="form-text">Filename must follow <strong>LN_MN_FN</strong> (e.g., DOE_M_JANE.pdf). Max 10MB.</div>
+                        <div class="form-text small">Filename must follow LN_MN_FN (e.g., DOE_M_JANE.pdf). Max 10MB.</div>
                         {% if form.attachment.errors %}
-                            <div class="text-danger">{{ form.attachment.errors }}</div>
+                            <div class="text-danger small">{{ form.attachment.errors }}</div>
                         {% endif %}
                     </div>
                     <div class="d-flex justify-content-between">
-                        <a href="{% url 'tickets:ticket_detail' ticket.id %}" class="btn btn-secondary">
-                            <i class="bi bi-arrow-left"></i> Back to Ticket
+                        <a href="{% url 'tickets:ticket_detail' ticket.id %}" class="btn btn-outline-secondary btn-sm">
+                            ← Back to Ticket
                         </a>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-send"></i> Send Message
+                        <button type="submit" class="btn" style="background-color: #2c3e50; color: white;">
+                            Send Message
                         </button>
                     </div>
                 </form>
@@ -81,41 +75,36 @@
     </div>
     
     <div class="col-md-4">
-        <!-- Ticket Summary -->
         <div class="card">
             <div class="card-header">
-                <h5><i class="bi bi-info-circle"></i> Ticket Summary</h5>
+                <h6 class="mb-0">Ticket Info</h6>
             </div>
             <div class="card-body">
                 <div class="mb-3">
-                    <strong>Status:</strong><br>
-                    <span class="badge bg-{{ ticket.get_status_badge_class }} fs-6 mt-1">
-                        {{ ticket.get_status_display }}
-                    </span>
+                    <div class="small text-muted mb-1">Status</div>
+                    <div>{{ ticket.get_status_display }}</div>
                 </div>
                 
                 <div class="mb-3">
-                    <strong>Request Type:</strong><br>
-                    <span class="badge bg-secondary fs-6 mt-1">
-                        {{ ticket.get_nature_of_engagement_display }}
-                    </span>
+                    <div class="small text-muted mb-1">Request Type</div>
+                    <div>{{ ticket.get_nature_of_engagement_display }}</div>
                 </div>
                 
                 <div class="mb-3">
-                    <strong>Created:</strong><br>
-                    <span class="text-muted">{{ ticket.date_created|date:"M d, Y H:i" }}</span>
+                    <div class="small text-muted mb-1">Created</div>
+                    <div>{{ ticket.date_created|date:"M d, Y H:i" }}</div>
                 </div>
                 
                 {% if ticket.assigned_to %}
                     <div class="mb-3">
-                        <strong>Assigned to:</strong><br>
-                        <span class="text-muted">{{ ticket.assigned_to.first_name }} {{ ticket.assigned_to.last_name }}</span>
+                        <div class="small text-muted mb-1">Assigned to</div>
+                        <div>{{ ticket.assigned_to.first_name }} {{ ticket.assigned_to.last_name }}</div>
                     </div>
                 {% endif %}
                 
-                <div class="d-grid">
-                    <a href="{% url 'tickets:user_dashboard' %}" class="btn btn-outline-primary">
-                        <i class="bi bi-house"></i> My Dashboard
+                <div class="border-top pt-3 mt-3">
+                    <a href="{% url 'tickets:user_dashboard' %}" class="btn btn-outline-secondary btn-sm w-100">
+                        My Dashboard
                     </a>
                 </div>
             </div>

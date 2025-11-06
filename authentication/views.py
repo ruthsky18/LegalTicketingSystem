@@ -55,7 +55,18 @@ def user_login(request):
 
 @login_required
 def profile(request):
-    return render(request, 'authentication/profile.html')
+    if request.method == 'POST':
+        from .forms import ProfileUpdateForm
+        form = ProfileUpdateForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Profile updated successfully!')
+            return redirect('auth:profile')
+    else:
+        from .forms import ProfileUpdateForm
+        form = ProfileUpdateForm(instance=request.user)
+    
+    return render(request, 'authentication/profile.html', {'form': form})
 
 
 def user_logout(request):

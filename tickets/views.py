@@ -57,11 +57,25 @@ def create_ticket(request):
         if form.is_valid():
             ticket = form.save(commit=False)
             ticket.user = request.user
+            # Set user information from logged-in user (since fields are disabled)
+            ticket.name = request.user.first_name
+            ticket.last_name = request.user.last_name
+            ticket.email = request.user.email
+            # Always set department from user profile (required field)
+            if request.user.department:
+                ticket.department = request.user.department
+            else:
+                # If user doesn't have department, set a default or show error
+                messages.error(request, 'Please update your profile with a department before creating tickets.')
+                return render(request, 'tickets/create_ticket.html', {'form': form})
             ticket.save()
             messages.success(request, 'Ticket created successfully!')
             return redirect('tickets:user_dashboard')
     else:
         form = TicketForm(user=request.user)
+        # Check if user has department set
+        if not request.user.department:
+            messages.warning(request, 'Please update your profile with a department. You will need it to create tickets.')
     
     return render(request, 'tickets/create_ticket.html', {'form': form})
 

@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Sign Up - LRMS{% endblock %}
+{% block title %}Sign Up - Legal Department Ticketing System{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
@@ -47,13 +47,14 @@
                     </div>
                     
                     <div class="mb-3">
-                        <label for="{{ form.role.id_for_label }}" class="form-label">Role</label>
-                        {{ form.role }}
-                        {% if form.role.errors %}
-                            <div class="text-danger">{{ form.role.errors }}</div>
+                        <label for="{{ form.department.id_for_label }}" class="form-label">Department</label>
+                        {{ form.department }}
+                        {% if form.department.errors %}
+                            <div class="text-danger">{{ form.department.errors }}</div>
                         {% endif %}
-                        <div class="form-text">Choose "Department User" if you need legal assistance, or "Legal Admin" if you're part of the legal team.</div>
+                        <div class="form-text">Select your department. This will be used when creating tickets.</div>
                     </div>
+                    {{ form.role }}
                     
                     <div class="mb-3">
                         <label for="{{ form.password1.id_for_label }}" class="form-label">Password</label>

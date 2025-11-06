@@ -31,11 +31,38 @@ class TicketForm(forms.ModelForm):
         user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
         
-        # Auto-fill user information if available
+        # Auto-fill and disable user information if available
         if user:
             self.fields['name'].initial = user.first_name
+            self.fields['name'].widget.attrs.update({
+                'readonly': 'readonly',
+                'style': 'background-color: #f8f9fa; cursor: not-allowed;'
+            })
+            
             self.fields['last_name'].initial = user.last_name
+            self.fields['last_name'].widget.attrs.update({
+                'readonly': 'readonly',
+                'style': 'background-color: #f8f9fa; cursor: not-allowed;'
+            })
+            
             self.fields['email'].initial = user.email
+            self.fields['email'].widget.attrs.update({
+                'readonly': 'readonly',
+                'style': 'background-color: #f8f9fa; cursor: not-allowed;'
+            })
+            
+            # Always set department from user profile
+            if user.department:
+                self.fields['department'].initial = user.department
+            else:
+                # If user doesn't have department, show message
+                self.fields['department'].initial = None
+            # Make department not required in form validation since we handle it in view
+            self.fields['department'].required = False
+            self.fields['department'].widget.attrs.update({
+                'disabled': 'disabled',
+                'style': 'background-color: #f8f9fa; cursor: not-allowed;'
+            })
     
     def clean(self):
         cleaned_data = super().clean()

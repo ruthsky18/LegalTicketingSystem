@@ -9,7 +9,7 @@ urlpatterns = [
     path('create/', views.create_ticket, name='create_ticket'),
     path('ticket/<int:ticket_id>/', views.ticket_detail, name='ticket_detail'),
     path('ticket/<int:ticket_id>/conversation/', views.user_ticket_conversation, name='user_ticket_conversation'),
-    # Legal team (LRMS admin) routes
+    # Legal team admin routes
     path('legal/', views.admin_dashboard, name='admin_dashboard'),
     path('legal/ticket/<int:ticket_id>/', views.admin_ticket_detail, name='admin_ticket_detail'),
     path('legal/ticket/<int:ticket_id>/conversation/', views.ticket_conversation, name='ticket_conversation'),
