@@ -39,26 +39,85 @@ if allowed_hosts_str:
 else:
     ALLOWED_HOSTS = []
 
-# Always add Railway domain (critical for deployment)
-railway_domain = 'web-production-6cd81.up.railway.app'
-if railway_domain not in ALLOWED_HOSTS:
-    ALLOWED_HOSTS.append(railway_domain)
+# Add localhost for development
+if DEBUG:
+    ALLOWED_HOSTS.extend(['127.0.0.1', 'localhost'])
 
-# Also add wildcard for Railway subdomains (more flexible)
-if '*' not in ALLOWED_HOSTS and not DEBUG:
-    ALLOWED_HOSTS.append('*')
+# Detect Railway domain dynamically
+# Check for Railway public domain environment variable (Railway sometimes provides this)
+railway_public_domain = os.environ.get('RAILWAY_PUBLIC_DOMAIN', '')
+if railway_public_domain and railway_public_domain not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(railway_public_domain)
+
+# Check for Railway custom domain
+railway_custom_domain = os.environ.get('RAILWAY_STATIC_URL', '')
+if railway_custom_domain:
+    # Extract domain from URL if it's a full URL
+    from urllib.parse import urlparse
+    parsed = urlparse(railway_custom_domain)
+    if parsed.netloc and parsed.netloc not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(parsed.netloc)
+
+# Detect if we're on Railway and add *.up.railway.app pattern
+# Railway domains follow pattern: *.up.railway.app
+is_on_railway = (
+    'RAILWAY_ENVIRONMENT' in os.environ or 
+    'RAILWAY_PROJECT_ID' in os.environ or
+    'RAILWAY' in os.environ or
+    'PGHOST' in os.environ  # Railway provides PGHOST for databases
+)
+
+# If on Railway (detected by environment variables), allow all hosts for flexibility
+# This is safe for UAT and necessary since Railway domains can change
+if is_on_railway:
+    # For UAT/production on Railway, allow all hosts
+    # Railway provides different domains, so wildcard is necessary
+    if '*' not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append('*')
+    # Also allow Railway subdomain pattern (works with leading dot)
+    if '.up.railway.app' not in [str(h) for h in ALLOWED_HOSTS]:
+        # Allow any subdomain of up.railway.app (e.g., web-production-*.up.railway.app)
+        ALLOWED_HOSTS.append('.up.railway.app')
 
 # CSRF Trusted Origins (required for HTTPS)
-CSRF_TRUSTED_ORIGINS = [
-    'https://web-production-6cd81.up.railway.app',
-    'http://web-production-6cd81.up.railway.app',
-]
+CSRF_TRUSTED_ORIGINS = []
 
-# Also add from environment variable if provided
+# Add from environment variable if provided
 csrf_origins_str = config('CSRF_TRUSTED_ORIGINS', default='')
 if csrf_origins_str:
     additional_origins = [origin.strip() for origin in csrf_origins_str.split(',') if origin.strip()]
     CSRF_TRUSTED_ORIGINS.extend(additional_origins)
+
+# If on Railway, add Railway domain to CSRF trusted origins
+if is_on_railway:
+    # Add Railway public domain if available
+    if railway_public_domain:
+        if f'https://{railway_public_domain}' not in CSRF_TRUSTED_ORIGINS:
+            CSRF_TRUSTED_ORIGINS.append(f'https://{railway_public_domain}')
+        if f'http://{railway_public_domain}' not in CSRF_TRUSTED_ORIGINS:
+            CSRF_TRUSTED_ORIGINS.append(f'http://{railway_public_domain}')
+    
+    # For UAT/development on Railway, allow all origins if DEBUG=True
+    if DEBUG:
+        # Allow all origins for UAT flexibility
+        CSRF_TRUSTED_ORIGINS.append('*')
+    else:
+        # In production, add pattern for all Railway subdomains
+        CSRF_TRUSTED_ORIGINS.append('https://*.up.railway.app')
+        CSRF_TRUSTED_ORIGINS.append('http://*.up.railway.app')
+
+# Remove duplicates
+CSRF_TRUSTED_ORIGINS = list(set(CSRF_TRUSTED_ORIGINS))
+
+# CSRF settings - allow signup from any location (still requires CSRF token)
+# In development (DEBUG=True), use insecure cookies (HTTP)
+# In production (DEBUG=False), use secure cookies (HTTPS)
+CSRF_COOKIE_SECURE = False if DEBUG else True  # Only use secure cookies in production with HTTPS
+CSRF_COOKIE_HTTPONLY = False  # Allow JavaScript to read CSRF token if needed
+CSRF_USE_SESSIONS = False  # Use cookie-based CSRF (works better for mobile)
+CSRF_COOKIE_SAMESITE = 'Lax'  # Allow CSRF cookie to work across different scenarios
+# Ensure CSRF cookie domain is not set (allows localhost and all domains)
+CSRF_COOKIE_DOMAIN = None
 
 
 # Application definition
@@ -70,13 +129,20 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # Third-party apps
+    'rest_framework',
+    'corsheaders',
+    # Local apps
     'authentication',
     'tickets',
+    'system_admin',
+    'api',  # REST API app
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  # CORS middleware (must be before CommonMiddleware)
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -110,21 +176,38 @@ WSGI_APPLICATION = 'lrms_project.wsgi.application'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 # Get database configuration from environment
-db_engine = config('DB_ENGINE', default='').strip()
-db_name = config('DB_NAME', default='').strip()
-db_user = config('DB_USER', default='').strip()
-db_password = config('DB_PASSWORD', default='').strip()
-db_host = config('DB_HOST', default='').strip()
-db_port = config('DB_PORT', default='').strip()
-db_sslmode = config('DB_SSLMODE', default='require').strip()
+# Check for Railway's auto-provided PostgreSQL variables first
+railway_pg_host = os.environ.get('PGHOST', '')
+railway_pg_database = os.environ.get('PGDATABASE', '')
+railway_pg_user = os.environ.get('PGUSER', '')
+railway_pg_password = os.environ.get('PGPASSWORD', '')
+railway_pg_port = os.environ.get('PGPORT', '')
+
+# Use Railway's PostgreSQL variables if available, otherwise use custom DB_* variables
+if railway_pg_host and railway_pg_database and railway_pg_user:
+    db_host = railway_pg_host
+    db_name = railway_pg_database
+    db_user = railway_pg_user
+    db_password = railway_pg_password
+    db_port = railway_pg_port or '5432'
+    db_engine = 'django.db.backends.postgresql'
+    db_sslmode = 'require'
+else:
+    # Fall back to custom environment variables
+    db_engine = config('DB_ENGINE', default='').strip()
+    db_name = config('DB_NAME', default='').strip()
+    db_user = config('DB_USER', default='').strip()
+    db_password = config('DB_PASSWORD', default='').strip()
+    db_host = config('DB_HOST', default='').strip()
+    db_port = config('DB_PORT', default='').strip()
+    db_sslmode = config('DB_SSLMODE', default='require').strip()
 
 # Check if we're in production (Railway) - detect by checking for Railway environment
-# or if DB_HOST contains 'supabase' or 'railway'
 is_production = (
     'RAILWAY_ENVIRONMENT' in os.environ or 
     'RAILWAY_PROJECT_ID' in os.environ or
-    'supabase' in db_host.lower() or
-    'railway' in db_host.lower()
+    'RAILWAY' in os.environ or
+    (db_host and ('supabase' in db_host.lower() or 'railway' in db_host.lower() or 'postgres' in db_host.lower()))
 )
 
 # Use PostgreSQL if we have the required variables OR if we're in production
@@ -144,6 +227,9 @@ if (db_host and db_name and db_user) or (is_production and db_host):
             'CONN_MAX_AGE': 600,  # Connection pooling
         }
     }
+    # Log database configuration in production (for debugging)
+    if is_production:
+        print(f"[DATABASE] Using PostgreSQL: {db_host}/{db_name}")
 else:
     # Fall back to SQLite only for local development
     DATABASES = {
@@ -152,6 +238,11 @@ else:
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
+    if is_production:
+        print("[WARNING] Production environment detected but using SQLite!")
+        print("[WARNING] Please set up PostgreSQL database on Railway.")
+        print(f"[DEBUG] PGHOST={railway_pg_host}, PGDATABASE={railway_pg_database}, PGUSER={railway_pg_user}")
+        print(f"[DEBUG] DB_HOST={db_host}, DB_NAME={db_name}, DB_USER={db_user}")
 
 
 # Password validation
@@ -216,3 +307,75 @@ LOGOUT_REDIRECT_URL = '/auth/login/'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# REST Framework configuration
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 20,
+    'DEFAULT_FILTER_BACKENDS': [
+        'rest_framework.filters.SearchFilter',
+        'rest_framework.filters.OrderingFilter',
+    ],
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+    ],
+}
+
+# CORS configuration - allow frontend to access API
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # React default port
+    "http://localhost:3001",  # Alternative React port
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:3001",
+    "http://localhost:5173",  # Vite default port
+    "http://localhost:8080",  # Vue default port
+    "http://127.0.0.1:8080",
+]
+
+# Allow CORS from any origin in development (for testing)
+if DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = True
+    CORS_ALLOW_CREDENTIALS = True
+else:
+    # In production, only allow specific origins
+    CORS_ALLOW_CREDENTIALS = True
+    # Add your production frontend URL here
+    CORS_ALLOWED_ORIGINS.extend([
+        "https://your-frontend-domain.com",
+        "https://web-production-6cd81.up.railway.app",  # If frontend is on same domain
+    ])
+
+# CORS settings
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
+
+# In development, allow all origins (for testing)
+if DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = True
