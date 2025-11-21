@@ -43,7 +43,6 @@ class UserViewSet(viewsets.ModelViewSet):
     def current(self, request):
         """Alias for me endpoint"""
         return self.me(request)
-        return self.me(request)
 
 
 class TicketViewSet(viewsets.ModelViewSet):
