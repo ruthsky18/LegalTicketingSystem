@@ -52,12 +52,17 @@ print('WSGI application imported OK')
     exit 1
 }
 
-# Run migrations (non-blocking)
+# Run migrations (required - exit if fails)
 echo ""
 echo "Running database migrations..."
-python manage.py migrate --noinput || {
-    echo "WARNING: Migrations failed - continuing anyway"
-}
+if python manage.py migrate --noinput; then
+    echo "✅ Migrations completed successfully"
+else
+    echo "❌ Migrations failed!"
+    echo "This is required - cannot start without database tables"
+    echo "Check database connection and try again"
+    exit 1
+fi
 
 # Start Gunicorn
 echo ""
