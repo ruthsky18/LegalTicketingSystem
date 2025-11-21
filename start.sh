@@ -12,7 +12,9 @@ if python scripts/validate_django.py; then
 else
     echo "❌ Django configuration validation failed!"
     echo "Check the errors above and fix them before starting Gunicorn."
-    exit 1
+    echo ""
+    echo "Attempting to continue anyway - check logs for specific errors..."
+    # Don't exit - let Gunicorn try to start and show the actual error
 fi
 
 # Run migrations

@@ -77,6 +77,7 @@ try:
 except Exception as e:
     print(f"  ⚠️  Database connection failed: {e}")
     print("  (This might be okay if database isn't set up yet)")
+    # Don't exit - database connection might fail during validation but work later
 
 # Try importing all apps
 print("\n6. Testing app imports...")

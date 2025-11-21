@@ -184,7 +184,8 @@ railway_pg_password = os.environ.get('PGPASSWORD', '')
 railway_pg_port = os.environ.get('PGPORT', '')
 
 # Use Railway's PostgreSQL variables if available, otherwise use custom DB_* variables
-if railway_pg_host and railway_pg_database and railway_pg_user:
+if railway_pg_host and railway_pg_database and railway_pg_user and railway_pg_password:
+    # Railway PostgreSQL is configured
     db_host = railway_pg_host
     db_name = railway_pg_database
     db_user = railway_pg_user
@@ -192,8 +193,9 @@ if railway_pg_host and railway_pg_database and railway_pg_user:
     db_port = railway_pg_port or '5432'
     db_engine = 'django.db.backends.postgresql'
     db_sslmode = 'require'
+    print(f"[DATABASE] Using Railway PostgreSQL: {db_host}/{db_name}")
 else:
-    # Fall back to custom environment variables
+    # Fall back to custom environment variables (for Supabase or other providers)
     db_engine = config('DB_ENGINE', default='').strip()
     db_name = config('DB_NAME', default='').strip()
     db_user = config('DB_USER', default='').strip()
@@ -201,6 +203,8 @@ else:
     db_host = config('DB_HOST', default='').strip()
     db_port = config('DB_PORT', default='').strip()
     db_sslmode = config('DB_SSLMODE', default='require').strip()
+    if db_host:
+        print(f"[DATABASE] Using custom PostgreSQL: {db_host}/{db_name}")
 
 # Check if we're in production (Railway) - detect by checking for Railway environment
 is_production = (
@@ -210,14 +214,13 @@ is_production = (
     (db_host and ('supabase' in db_host.lower() or 'railway' in db_host.lower() or 'postgres' in db_host.lower()))
 )
 
-# Use PostgreSQL if we have the required variables OR if we're in production
-if (db_host and db_name and db_user) or (is_production and db_host):
-    # Force PostgreSQL for production
+# Use PostgreSQL if we have the required variables
+if db_host and db_name and db_user and db_password:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': db_name or 'postgres',
-            'USER': db_user or 'postgres',
+            'NAME': db_name,
+            'USER': db_user,
             'PASSWORD': db_password,
             'HOST': db_host,
             'PORT': db_port or '5432',
@@ -227,9 +230,18 @@ if (db_host and db_name and db_user) or (is_production and db_host):
             'CONN_MAX_AGE': 600,  # Connection pooling
         }
     }
-    # Log database configuration in production (for debugging)
-    if is_production:
-        print(f"[DATABASE] Using PostgreSQL: {db_host}/{db_name}")
+elif is_production:
+    # Production but no database configured - this is an error
+    print("[ERROR] Production environment detected but no PostgreSQL database configured!")
+    print(f"[DEBUG] PGHOST={railway_pg_host}, PGDATABASE={railway_pg_database}, PGUSER={railway_pg_user}, PGPASSWORD={'SET' if railway_pg_password else 'NOT SET'}")
+    print(f"[DEBUG] DB_HOST={db_host}, DB_NAME={db_name}, DB_USER={db_user}, DB_PASSWORD={'SET' if db_password else 'NOT SET'}")
+    # Still use SQLite as fallback to prevent complete failure, but log warning
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 else:
     # Fall back to SQLite only for local development
     DATABASES = {
@@ -238,11 +250,6 @@ else:
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
-    if is_production:
-        print("[WARNING] Production environment detected but using SQLite!")
-        print("[WARNING] Please set up PostgreSQL database on Railway.")
-        print(f"[DEBUG] PGHOST={railway_pg_host}, PGDATABASE={railway_pg_database}, PGUSER={railway_pg_user}")
-        print(f"[DEBUG] DB_HOST={db_host}, DB_NAME={db_name}, DB_USER={db_user}")
 
 
 # Password validation
