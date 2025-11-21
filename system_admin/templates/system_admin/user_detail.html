@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+
+{% block title %}User Details - {{ user_obj.username }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="bi bi-person"></i> User Details</h1>
+        <div>
+            <a href="{% url 'system_admin:user_edit' user_obj.id %}" class="btn btn-warning">
+                <i class="bi bi-pencil"></i> Edit User
+            </a>
+            <a href="{% url 'system_admin:user_management' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Users
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> User Information</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <tr>
+                            <th width="40%">Username:</th>
+                            <td><strong>{{ user_obj.username }}</strong></td>
+                        </tr>
+                        <tr>
+                            <th>Email:</th>
+                            <td>{{ user_obj.email }}</td>
+                        </tr>
+                        <tr>
+                            <th>Full Name:</th>
+                            <td>{{ user_obj.first_name }} {{ user_obj.last_name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Role:</th>
+                            <td><span class="badge bg-info">{{ user_obj.role }}</span></td>
+                        </tr>
+                        <tr>
+                            <th>Department:</th>
+                            <td>{{ user_obj.department|default:"Not specified" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Status:</th>
+                            <td>
+                                {% if user_obj.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Inactive</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Permissions:</th>
+                            <td>
+                                {% if user_obj.is_superuser %}
+                                    <span class="badge bg-warning">Superuser</span>
+                                {% endif %}
+                                {% if user_obj.is_staff %}
+                                    <span class="badge bg-secondary">Staff</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Date Joined:</th>
+                            <td>{{ user_obj.date_joined|date:"F d, Y H:i" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Last Login:</th>
+                            <td>{{ user_obj.last_login|date:"F d, Y H:i"|default:"Never" }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-ticket"></i> User Tickets ({{ total_tickets }})</h5>
+                </div>
+                <div class="card-body">
+                    {% if user_tickets %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Title</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ticket in user_tickets %}
+                                <tr>
+                                    <td>{{ ticket.id }}</td>
+                                    <td><a href="{% url 'tickets:admin_ticket_detail' ticket.id %}">{{ ticket.title|truncatewords:5 }}</a></td>
+                                    <td><span class="badge bg-warning">{{ ticket.status }}</span></td>
+                                    <td>{{ ticket.date_created|date:"M d, Y" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No tickets found for this user.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

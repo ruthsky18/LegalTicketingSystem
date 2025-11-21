@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}System Settings{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="bi bi-gear"></i> System Settings</h1>
+        <a href="{% url 'system_admin:dashboard' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">System Configuration</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">System settings and configuration options will be available here.</p>
+                    
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> <strong>Note:</strong> This section is for future system configuration options.
+                    </div>
+
+                    <h5>Available Settings:</h5>
+                    <ul>
+                        <li>System preferences</li>
+                        <li>Email configuration</li>
+                        <li>Notification settings</li>
+                        <li>Security settings</li>
+                        <li>Backup configuration</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

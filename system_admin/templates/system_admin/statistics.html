@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+
+{% block title %}System Statistics{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="bi bi-graph-up"></i> System Statistics</h1>
+        <a href="{% url 'system_admin:dashboard' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <!-- User Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-people"></i> User Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h3>{{ stats.total_users }}</h3>
+                                    <p class="mb-0">Total Users</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h3>{{ stats.admin_users }}</h3>
+                                    <p class="mb-0">Admin Users</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h3>{{ stats.regular_users }}</h3>
+                                    <p class="mb-0">Regular Users</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h3>{{ stats.superusers }}</h3>
+                                    <p class="mb-0">Superusers</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tickets Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-ticket"></i> Ticket Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <h4>Total Tickets: {{ stats.total_tickets }}</h4>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Tickets by Status</h5>
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Status</th>
+                                        <th>Count</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in stats.tickets_by_status %}
+                                    <tr>
+                                        <td>{{ item.status|title }}</td>
+                                        <td><strong>{{ item.count }}</strong></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Tickets by Department</h5>
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Department</th>
+                                        <th>Count</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in stats.tickets_by_department %}
+                                    <tr>
+                                        <td>{{ item.department|title|default:"Not specified" }}</td>
+                                        <td><strong>{{ item.count }}</strong></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Statistics -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Tickets by Nature of Engagement</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Count</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in stats.tickets_by_nature %}
+                            <tr>
+                                <td>{{ item.nature_of_engagement|title }}</td>
+                                <td><strong>{{ item.count }}</strong></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Users by Department</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Department</th>
+                                <th>Count</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in stats.users_by_department %}
+                            <tr>
+                                <td>{{ item.department|title|default:"Not specified" }}</td>
+                                <td><strong>{{ item.count }}</strong></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

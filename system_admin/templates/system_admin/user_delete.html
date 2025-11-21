@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete User - {{ user_obj.username }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Delete User</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i> <strong>Warning!</strong> This action cannot be undone.
+                    </div>
+                    
+                    <p>Are you sure you want to delete the user:</p>
+                    <ul>
+                        <li><strong>Username:</strong> {{ user_obj.username }}</li>
+                        <li><strong>Email:</strong> {{ user_obj.email }}</li>
+                        <li><strong>Name:</strong> {{ user_obj.first_name }} {{ user_obj.last_name }}</li>
+                    </ul>
+                    
+                    <p class="text-danger"><strong>This will permanently delete the user and all associated data.</strong></p>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'system_admin:user_detail' user_obj.id %}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash"></i> Delete User
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

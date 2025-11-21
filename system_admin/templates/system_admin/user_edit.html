@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit User - {{ user_obj.username }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="bi bi-pencil"></i> Edit User</h1>
+        <a href="{% url 'system_admin:user_detail' user_obj.id %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-warning text-white">
+                    <h5 class="mb-0">Edit User: {{ user_obj.username }}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Username *</label>
+                                <input type="text" name="username" class="form-control" value="{{ user_obj.username }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Email *</label>
+                                <input type="email" name="email" class="form-control" value="{{ user_obj.email }}" required>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">First Name</label>
+                                <input type="text" name="first_name" class="form-control" value="{{ user_obj.first_name }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Last Name</label>
+                                <input type="text" name="last_name" class="form-control" value="{{ user_obj.last_name }}">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Role *</label>
+                                <select name="role" class="form-select" required>
+                                    <option value="user" {% if user_obj.role == 'user' %}selected{% endif %}>Department User</option>
+                                    <option value="admin" {% if user_obj.role == 'admin' %}selected{% endif %}>Legal Admin</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Department</label>
+                                <select name="department" class="form-select">
+                                    <option value="">Select Department</option>
+                                    <option value="hr" {% if user_obj.department == 'hr' %}selected{% endif %}>HR</option>
+                                    <option value="finance" {% if user_obj.department == 'finance' %}selected{% endif %}>Finance</option>
+                                    <option value="it" {% if user_obj.department == 'it' %}selected{% endif %}>IT</option>
+                                    <option value="marketing" {% if user_obj.department == 'marketing' %}selected{% endif %}>Marketing</option>
+                                    <option value="operations" {% if user_obj.department == 'operations' %}selected{% endif %}>Operations</option>
+                                    <option value="legal" {% if user_obj.department == 'legal' %}selected{% endif %}>Legal</option>
+                                    <option value="other" {% if user_obj.department == 'other' %}selected{% endif %}>Other</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">New Password (leave blank to keep current)</label>
+                            <input type="password" name="password" class="form-control" placeholder="Enter new password">
+                            <small class="form-text text-muted">Only fill this if you want to change the password</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="is_active" id="is_active" {% if user_obj.is_active %}checked{% endif %}>
+                                <label class="form-check-label" for="is_active">Active</label>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="is_staff" id="is_staff" {% if user_obj.is_staff %}checked{% endif %}>
+                                <label class="form-check-label" for="is_staff">Staff</label>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="is_superuser" id="is_superuser" {% if user_obj.is_superuser %}checked{% endif %}>
+                                <label class="form-check-label" for="is_superuser">Superuser</label>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'system_admin:user_detail' user_obj.id %}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Update User
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

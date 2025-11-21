@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block title %}Create New User{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="bi bi-person-plus"></i> Create New User</h1>
+        <a href="{% url 'system_admin:user_management' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Users
+        </a>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Create New User Account</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Username *</label>
+                                <input type="text" name="username" class="form-control" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Email *</label>
+                                <input type="email" name="email" class="form-control" required>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">First Name</label>
+                                <input type="text" name="first_name" class="form-control">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Last Name</label>
+                                <input type="text" name="last_name" class="form-control">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Password *</label>
+                                <input type="password" name="password" class="form-control" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Role *</label>
+                                <select name="role" class="form-select" required>
+                                    <option value="user">Department User</option>
+                                    <option value="admin">Legal Admin</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Department</label>
+                            <select name="department" class="form-select">
+                                <option value="">Select Department</option>
+                                <option value="hr">HR</option>
+                                <option value="finance">Finance</option>
+                                <option value="it">IT</option>
+                                <option value="marketing">Marketing</option>
+                                <option value="operations">Operations</option>
+                                <option value="legal">Legal</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="is_staff" id="is_staff">
+                                <label class="form-check-label" for="is_staff">Staff Member</label>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="is_superuser" id="is_superuser">
+                                <label class="form-check-label" for="is_superuser">Superuser (Full System Access)</label>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'system_admin:user_management' %}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-circle"></i> Create User
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
