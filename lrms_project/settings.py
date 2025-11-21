@@ -184,16 +184,19 @@ railway_pg_password = os.environ.get('PGPASSWORD', '')
 railway_pg_port = os.environ.get('PGPORT', '')
 
 # Use Railway's PostgreSQL variables if available, otherwise use custom DB_* variables
-if railway_pg_host and railway_pg_database and railway_pg_user and railway_pg_password:
+# Check if Railway PostgreSQL is configured (password can be empty string, so check explicitly)
+if railway_pg_host and railway_pg_database and railway_pg_user:
     # Railway PostgreSQL is configured
     db_host = railway_pg_host
     db_name = railway_pg_database
     db_user = railway_pg_user
-    db_password = railway_pg_password
+    db_password = railway_pg_password or ''  # Allow empty password (will fail connection but show error)
     db_port = railway_pg_port or '5432'
     db_engine = 'django.db.backends.postgresql'
     db_sslmode = 'require'
     print(f"[DATABASE] Using Railway PostgreSQL: {db_host}/{db_name}")
+    if not db_password:
+        print("[WARNING] PGPASSWORD is empty! Database connection will fail.")
 else:
     # Fall back to custom environment variables (for Supabase or other providers)
     db_engine = config('DB_ENGINE', default='').strip()
